@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="@dimen/extra_padding"
+    android:layout_marginRight="@dimen/extra_padding"
+    android:baselineAligned="false"
+    android:divider="?android:attr/dividerHorizontal"
+    android:orientation="horizontal"
+    android:showDividers="middle"
+    tools:context=".ui.CurrencyListActivity">
+
+    <!--
+    This layout is a two-pane layout for the Items master/detail flow.
+    -->
+
+    <RelativeLayout
+        android:id="@+id/activity_main"
+        android:layout_width="@dimen/item_width"
+        android:layout_height="match_parent">
+
+        <com.currency.rates.ui.RecyclerViewWithEmptyText
+            android:id="@+id/item_list"
+            android:name="com.currency.rates.ItemListFragment"
+            android:layout_width="@dimen/item_width"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="@dimen/extra_padding"
+            android:layout_marginRight="@dimen/extra_padding"
+            app:layoutManager="LinearLayoutManager"
+            tools:context="com.currency.rates.ui.CurrencyListActivity"
+            tools:listitem="@layout/currency_rates_detail_item_view" />
+
+        <TextView
+            android:id="@+id/empty_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:text="@string/no_data"
+            android:textSize="@dimen/big_text_size" />
+
+    </RelativeLayout>
+    <FrameLayout
+        android:id="@+id/item_detail_container"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3" />
+
+</LinearLayout>
