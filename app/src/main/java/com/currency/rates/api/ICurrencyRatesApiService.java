@@ -9,6 +9,4 @@ import retrofit2.http.Query;
 public interface ICurrencyRatesApiService {
     @GET("latest")
     Single<Currency> getCurrencyRates(@Query("base") String baseCurrency);
-
-
 }

@@ -4,8 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
     android:baselineAligned="false"
     android:divider="?android:attr/dividerHorizontal"
     android:orientation="horizontal"
@@ -21,13 +19,20 @@
         android:layout_width="@dimen/item_width"
         android:layout_height="match_parent">
 
+        <TextView
+            android:id="@+id/currencyHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_currency"
+            style="@style/HeadingTextStyle" />
+
         <com.currency.rates.ui.RecyclerViewWithEmptyText
             android:id="@+id/item_list"
             android:name="com.currency.rates.ItemListFragment"
             android:layout_width="@dimen/item_width"
             android:layout_height="match_parent"
-            android:layout_marginLeft="@dimen/extra_padding"
-            android:layout_marginRight="@dimen/extra_padding"
+
+            android:layout_below="@id/currencyHeading"
             app:layoutManager="LinearLayoutManager"
             tools:context="com.currency.rates.ui.CurrencyListActivity"
             tools:listitem="@layout/currency_rates_detail_item_view" />

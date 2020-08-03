@@ -35,10 +35,14 @@ public class CurrencyRatesDetailActivity extends AppCompatActivity {
             // using a fragment transaction.
             Bundle arguments = getIntent().getBundleExtra(CurrencyRatesDetailFragment.ARG_CURRENCY_RATE);
             fragment.setArguments(arguments);
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.item_detail_container, fragment, CurrencyRatesDetailFragment.CURRENCY_RATES_FRAGMENT_TAG)
+                    .commit();
         }
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.item_detail_container, fragment)
-                .commit();
+        else {
+            finish();
+        }
+
     }
 
 }

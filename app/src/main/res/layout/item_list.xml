@@ -1,21 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <TextView
+        android:id="@+id/currencyHeading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/select_currency"
+        style="@style/HeadingTextStyle" />
+
     <com.currency.rates.ui.RecyclerViewWithEmptyText
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/item_list"
         android:name="com.currency.rates.ItemListFragment"
         android:layout_width="match_parent"
+        android:layout_below="@id/currencyHeading"
         android:layout_height="match_parent"
-        android:layout_marginLeft="@dimen/extra_padding"
-        android:layout_marginRight="@dimen/extra_padding"
+
         app:layoutManager="LinearLayoutManager"
         tools:context=".ui.CurrencyListActivity"
-        tools:listitem="@layout/currency_rates_detail_item_view" />
+        tools:listitem="@layout/currency_item_view" />
 
     <TextView
         android:id="@+id/empty_view"

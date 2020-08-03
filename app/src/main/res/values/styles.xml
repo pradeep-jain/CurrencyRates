@@ -8,4 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="HeadingTextStyle">
+        <item name="android:textSize">@dimen/heading_text_size</item>
+        <item name="android:layout_margin">@dimen/standard_padding</item>
+    </style>
+
 </resources>

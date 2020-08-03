@@ -2,9 +2,8 @@ package com.currency.rates.managers;
 
 import android.content.Context;
 
-import com.currency.rates.R;
 import com.currency.rates.api.CurrencyClient;
-import com.currency.rates.db.CurrencyDatabase;
+import com.currency.rates.db.CurrencyDAO;
 import com.currency.rates.models.Currency;
 import com.currency.rates.util.NetworkUtil;
 
@@ -18,17 +17,21 @@ import io.reactivex.schedulers.Schedulers;
 
 public class CurrencyRatesManager {
     private Context context;
+    private CurrencyDAO currencyDAO;
+    private CurrencyClient currencyClient;
+    private String defaultCurrency = "INR";
 
-    public CurrencyRatesManager(Context context) {
+    public CurrencyRatesManager(Context context, CurrencyClient currencyClient, CurrencyDAO currencyDAO) {
         this.context = context;
+        this.currencyClient = currencyClient;
+        this.currencyDAO = currencyDAO;
     }
 
     public Single<List<Currency>> getAllCurrencyRates() {
         Single<Currency> observableCurrency;
 
         if (NetworkUtil.isNetworkAvailable(context)) {
-            CurrencyClient currencyClient = CurrencyClient.getInstance(context);
-            observableCurrency = currencyClient.getAllCurrencyRates(context.getResources().getString(R.string.default_currency));
+            observableCurrency = currencyClient.getAllCurrencyRates(defaultCurrency);
             if (observableCurrency != null) {
                 return observableCurrency.map(currency -> {
                     List<Single<Currency>> observableCurrencyList = new ArrayList<>();
@@ -44,7 +47,7 @@ public class CurrencyRatesManager {
                                 currencyList.add(currency);
                             }
                             if (currencyList.size() > 0) {
-                                addCurrencyToDB(context, currencyList);
+                                addCurrencyToDB(currencyList);
                             }
                             return currencyList;
                         }));
@@ -52,12 +55,12 @@ public class CurrencyRatesManager {
                 return null;
             }
         } else {
-            return CurrencyDatabase.getInstance(context).currencyDAO().getAllCurrencyRates();
+            return currencyDAO.getAllCurrencyRates();
         }
     }
 
-    private void addCurrencyToDB(Context context, List<Currency> currencies) {
-        Completable.fromAction(() -> CurrencyDatabase.getInstance(context).currencyDAO().insertCurrencyRates(currencies)).subscribeOn(Schedulers.io())
+    private void addCurrencyToDB(List<Currency> currencies) {
+        Completable.fromAction(() -> currencyDAO.insertCurrencyRates(currencies)).subscribeOn(Schedulers.io())
                 .subscribe();
     }
 }

@@ -1,14 +1,10 @@
 package com.currency.rates.api;
 
-import android.content.Context;
-
-import com.currency.rates.R;
 import com.currency.rates.models.Currency;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import io.reactivex.Single;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -17,27 +13,24 @@ public class CurrencyClient {
     private static CurrencyClient INSTANCE;
     private ICurrencyRatesApiService currencyRatesApiService;
 
-    public static CurrencyClient getInstance(Context context) {
+    public static CurrencyClient getInstance() {
         if (INSTANCE == null) {
             synchronized (CurrencyClient.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new CurrencyClient(context);
+                    INSTANCE = new CurrencyClient();
                 }
             }
         }
         return INSTANCE;
     }
 
-    private CurrencyClient(Context context) {
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.level(HttpLoggingInterceptor.Level.BODY);
-
+    private CurrencyClient() {
         Gson gson = new GsonBuilder()
                 .setLenient()
                 .create();
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(context.getString(R.string.base_url))
+                .baseUrl("http://api.ratesapi.io/api/")
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();

@@ -4,4 +4,5 @@
     <dimen name="extra_padding">16dp</dimen>
     <dimen name="standard_padding">8dp</dimen>
     <dimen name="big_text_size">36sp</dimen>
+    <dimen name="heading_text_size">24sp</dimen>
 </resources>
