@@ -14,12 +14,11 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.util.List;
-
 import androidx.room.Room;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 @Config(manifest = Config.NONE)
@@ -41,7 +40,9 @@ public class CurrencyRatesManagerTest {
 
     @Test
     public void getAllCurrencyRates_thenAllCurrencyRatesAreRetrieved() {
-        List<Currency> currencyList = currencyRatesManager.getAllCurrencyRates().blockingGet();
-        assertFalse(currencyList.isEmpty());
+        String defaultCurrency = "INR";
+        Currency currency = currencyRatesManager.getCurrencyList(defaultCurrency).blockingGet();
+        assertNotNull(currency);
+        assertEquals(currency.getBase(), defaultCurrency);
     }
 }

@@ -28,11 +28,10 @@ public class CurrencyRatesDetailActivity extends AppCompatActivity {
         //
         // http://developer.android.com/guide/components/fragments.html
         //
-        CurrencyRatesDetailFragment fragment = new CurrencyRatesDetailFragment();
+        //CurrencyRatesDetailFragment fragment = new CurrencyRatesDetailFragment();
 
         if (savedInstanceState == null) {
-            // Create the detail fragment and add it to the activity
-            // using a fragment transaction.
+            CurrencyRatesDetailFragment fragment = new CurrencyRatesDetailFragment();
             Bundle arguments = getIntent().getBundleExtra(CurrencyRatesDetailFragment.ARG_CURRENCY_RATE);
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()

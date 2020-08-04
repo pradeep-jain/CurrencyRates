@@ -15,6 +15,7 @@ import com.currency.rates.db.CurrencyDatabase;
 import com.currency.rates.managers.CurrencyRatesManager;
 import com.currency.rates.models.Currency;
 import com.currency.rates.util.CurrencyUtil;
+import com.currency.rates.util.ProgressDialogUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,12 +45,12 @@ public class CurrencyListActivity extends AppCompatActivity {
      * device.
      */
     private boolean mTwoPane;
-    private ArrayList<Currency> currencyList = new ArrayList<>();
-    private RecyclerViewWithEmptyText currencyListRecyclerView;
-    private CurrencyListRecyclerViewAdapter currencyListRecyclerViewAdapter;
+    ArrayList<String> baseCurrencyList = new ArrayList<>();
+    private RecyclerViewWithEmptyText baseCurrencyListRecyclerView;
+    private CurrencyListRecyclerViewAdapter baseCurrencyListRecyclerViewAdapter;
     private AlertDialog progressDialog;
-    private final String CURRENCY_LIST_KEY = "currency_list_key";
-    private final String CURRENT_POSITION = "current_position";
+    private final String KEY_BASE_CURRENCY_LIST = "key_base_currency_list";
+    private final String KEY_CURRENT_POSITION = "key_current_position";
     private int currentPosition = 0;
 
     private CompositeDisposable disposable = new CompositeDisposable();
@@ -66,22 +67,23 @@ public class CurrencyListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
-        currencyListRecyclerView = findViewById(R.id.item_list);
+        baseCurrencyListRecyclerView = findViewById(R.id.item_list);
         TextView emptyView = findViewById(R.id.empty_view);
-        setupRecyclerView(currencyListRecyclerView, emptyView);
-        createProgressDialog();
+        setupRecyclerView(baseCurrencyListRecyclerView, emptyView);
+
+        progressDialog = ProgressDialogUtil.createProgressDialog(CurrencyListActivity.this);
         if(savedInstanceState != null){
-            currencyList = savedInstanceState.getParcelableArrayList(CURRENCY_LIST_KEY);
-            if(currencyList == null || currencyList.size() == 0){
-                showProgressDialog();
-                getCurrencyRates();
+            baseCurrencyList = savedInstanceState.getStringArrayList(KEY_BASE_CURRENCY_LIST);
+            if(baseCurrencyList == null || baseCurrencyList.size() == 0){
+                ProgressDialogUtil.showProgressDialog(progressDialog);
+                getBaseCurrencyList();
             }else {
-                currencyListRecyclerViewAdapter.setCurrencyData(currencyList);
-                currentPosition = savedInstanceState.getInt(CURRENT_POSITION);
+                baseCurrencyListRecyclerViewAdapter.setCurrencyData(baseCurrencyList);
+                currentPosition = savedInstanceState.getInt(KEY_CURRENT_POSITION);
             }
         }else {
-            showProgressDialog();
-            getCurrencyRates();
+            ProgressDialogUtil.showProgressDialog(progressDialog);
+            getBaseCurrencyList();
         }
     }
 
@@ -96,73 +98,52 @@ public class CurrencyListActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(CURRENCY_LIST_KEY, currencyList);
-        outState.putInt(CURRENT_POSITION, currentPosition);
+        outState.putStringArrayList(KEY_BASE_CURRENCY_LIST, baseCurrencyList);
+        outState.putInt(KEY_CURRENT_POSITION, currentPosition);
     }
 
-
-    private void getCurrencyRates() {
-        Single<List<Currency>> currencyRates = new CurrencyRatesManager(getBaseContext(),
+    private void getBaseCurrencyList() {
+        String defaultCurrency = getString(R.string.default_currency);
+        Single<Currency> currency = new CurrencyRatesManager(getBaseContext(),
                 CurrencyClient.getInstance(),
-                CurrencyDatabase.getInstance(getBaseContext()).currencyDAO()).getAllCurrencyRates();
+                CurrencyDatabase.getInstance(getBaseContext()).currencyDAO()).getCurrencyList(defaultCurrency);
 
-        currencyRates.subscribeOn(Schedulers.io())
+        currency.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new SingleObserver<List<Currency>>() {
+                .subscribe(new SingleObserver<Currency>() {
                     @Override
                     public void onSubscribe(Disposable d) {
                         disposable.add(d);
                     }
 
                     @Override
-                    public void onSuccess(List<Currency> currencies) {
-                        if (currencies != null) {
-                            currencyList.addAll(currencies);
-                            currencyListRecyclerViewAdapter.setCurrencyData(currencies);
+                    public void onSuccess(Currency currency) {
+                        if (currency != null) {
+                            baseCurrencyList.addAll(CurrencyUtil.getCurrencyList(currency));
+                            baseCurrencyListRecyclerViewAdapter.setCurrencyData(baseCurrencyList);
                         }
-                        hideProgressDialog();
+                        ProgressDialogUtil.hideProgressDialog(progressDialog);
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        hideProgressDialog();
+                        ProgressDialogUtil.hideProgressDialog(progressDialog);
                     }
                 });
     }
 
     private void setupRecyclerView(@NonNull RecyclerViewWithEmptyText recyclerView, @NonNull TextView emptyView) {
-        currencyListRecyclerViewAdapter = new CurrencyListRecyclerViewAdapter(this, currencyList, mTwoPane);
+        baseCurrencyListRecyclerViewAdapter = new CurrencyListRecyclerViewAdapter(this, baseCurrencyList, mTwoPane);
         recyclerView.setEmptyView(emptyView);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setAdapter(currencyListRecyclerViewAdapter);
-        currencyListRecyclerViewAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-        @Override
-        public void onChanged() {
-            super.onChanged();
-            recyclerView.smoothScrollToPosition(currentPosition);
-        }
+        recyclerView.setAdapter(baseCurrencyListRecyclerViewAdapter);
+        baseCurrencyListRecyclerViewAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                recyclerView.smoothScrollToPosition(currentPosition);
+            }
         });
-}
-
-    private void createProgressDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(false);
-        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        View progressView = inflater.inflate(R.layout.progress_view, null);
-        builder.setView(progressView);
-        progressDialog = builder.create();
-    }
-
-    private void showProgressDialog() {
-        if (progressDialog != null && !progressDialog.isShowing()) {
-            progressDialog.show();
-        }
-    }
-
-    private void hideProgressDialog() {
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
     }
 
     private void setCurrentPosition(int position){
@@ -173,19 +154,19 @@ public class CurrencyListActivity extends AppCompatActivity {
             extends RecyclerView.Adapter<CurrencyListRecyclerViewAdapter.ViewHolder> {
 
         private final CurrencyListActivity parentActivity;
-        private List<Currency> currencyList;
+        private List<String> baseCurrencyList;
         private final boolean twoPane;
         private View selectedView;
 
-        CurrencyListRecyclerViewAdapter(CurrencyListActivity parent, List<Currency> items,
+        CurrencyListRecyclerViewAdapter(CurrencyListActivity parent, List<String> items,
                                         boolean twoPane) {
-            this.currencyList = items;
+            this.baseCurrencyList = items;
             this.parentActivity = parent;
             this.twoPane = twoPane;
         }
 
-        void setCurrencyData(List<Currency> currencies) {
-            this.currencyList = currencies;
+        void setCurrencyData(List<String> baseCurrencyList) {
+            this.baseCurrencyList = baseCurrencyList;
             notifyDataSetChanged();
         }
 
@@ -199,13 +180,13 @@ public class CurrencyListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.baseCurrency.setText(currencyList.get(position).getBase());
+            holder.baseCurrency.setText(baseCurrencyList.get(position));
             holder.itemView.setTag(position);
             holder.itemView.setOnClickListener(onClickListener);
             if(twoPane && parentActivity.currentPosition == position){
                 setViewSelected(holder.itemView);
-                addCurrencyDetailsFragment(createBundle(currencyList.get(position)));
-                parentActivity.currencyListRecyclerView.smoothScrollToPosition(position);
+                addCurrencyDetailsFragment(createBundle(baseCurrencyList.get(position)));
+                parentActivity.baseCurrencyListRecyclerView.smoothScrollToPosition(position);
             }
             else {
                 holder.itemView.setSelected(false);
@@ -214,7 +195,7 @@ public class CurrencyListActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            return currencyList.size();
+            return baseCurrencyList.size();
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
@@ -231,7 +212,7 @@ public class CurrencyListActivity extends AppCompatActivity {
             public void onClick(View view) {
                 int selectedPosition = (int) view.getTag();
                 parentActivity.setCurrentPosition(selectedPosition);
-                Bundle bundle = createBundle(currencyList.get(selectedPosition));
+                Bundle bundle = createBundle(baseCurrencyList.get(selectedPosition));
                 if (twoPane) {
                     setViewBackground(view, selectedView);
                     addCurrencyDetailsFragment(bundle);
@@ -248,12 +229,9 @@ public class CurrencyListActivity extends AppCompatActivity {
                 setViewSelected(currentView);
         }
 
-        private Bundle createBundle(Currency currency){
-            ArrayList<String> keyList = new ArrayList<>(currency.getRates().keySet());
-            ArrayList<String> valueList = CurrencyUtil.getValueListFromMap(keyList, currency.getRates());
+        private Bundle createBundle(String selectedCurrency){
             Bundle bundle = new Bundle();
-            bundle.putStringArrayList(CurrencyRatesDetailFragment.ARG_CURRENCY_KEY, keyList);
-            bundle.putStringArrayList(CurrencyRatesDetailFragment.ARG_CURRENCY_VALUE, valueList);
+            bundle.putString(CurrencyRatesDetailFragment.ARG_BASE_CURRENCY_KEY, selectedCurrency);
             return bundle;
         }
 

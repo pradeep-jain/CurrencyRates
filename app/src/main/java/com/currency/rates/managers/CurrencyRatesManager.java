@@ -27,36 +27,46 @@ public class CurrencyRatesManager {
         this.currencyDAO = currencyDAO;
     }
 
-    public Single<List<Currency>> getAllCurrencyRates() {
+    public void getAndSaveCurrencyRatesInDB() {
         Single<Currency> observableCurrency;
 
-        if (NetworkUtil.isNetworkAvailable(context)) {
-            observableCurrency = currencyClient.getAllCurrencyRates(defaultCurrency);
-            if (observableCurrency != null) {
-                return observableCurrency.map(currency -> {
-                    List<Single<Currency>> observableCurrencyList = new ArrayList<>();
-                    for (String countryCurrency : currency.getRates().keySet()) {
-                        observableCurrencyList.add(currencyClient.getAllCurrencyRates(countryCurrency));
-                    }
-                    return observableCurrencyList;
-                }).flatMap((Function<List<Single<Currency>>, Single<List<Currency>>>) singles ->
-                        Single.zip(singles, objects -> {
-                            List<Currency> currencyList = new ArrayList<>();
-                            for (Object o : objects) {
-                                Currency currency = (Currency) o;
-                                currencyList.add(currency);
-                            }
-                            if (currencyList.size() > 0) {
-                                addCurrencyToDB(currencyList);
-                            }
-                            return currencyList;
-                        }));
-            } else {
-                return null;
-            }
-        } else {
-            return currencyDAO.getAllCurrencyRates();
+        observableCurrency = currencyClient.getAllCurrencyRates(defaultCurrency);
+        if (observableCurrency != null) {
+            observableCurrency.map(currency -> {
+                List<Single<Currency>> observableCurrencyList = new ArrayList<>();
+                for (String countryCurrency : currency.getRates().keySet()) {
+                    observableCurrencyList.add(currencyClient.getAllCurrencyRates(countryCurrency));
+                }
+                return observableCurrencyList;
+            }).flatMap((Function<List<Single<Currency>>, Single<List<Currency>>>) singles ->
+                    Single.zip(singles, objects -> {
+                        List<Currency> currencyList = new ArrayList<>();
+                        for (Object o : objects) {
+                            Currency currency = (Currency) o;
+                            currencyList.add(currency);
+                        }
+                        if (currencyList.size() > 0) {
+                            addCurrencyToDB(currencyList);
+                        }
+                        return currencyList;
+                    })).subscribeOn(Schedulers.io())
+                    .subscribe();
         }
+    }
+
+    public Single<Currency> getCurrencyList(String baseCurrency) {
+        Single<Currency> currencySingle;
+        if (NetworkUtil.isNetworkAvailable(context)) {
+            currencySingle = currencyClient.getAllCurrencyRates(baseCurrency);
+            return currencySingle.map(currency -> {
+                Completable.fromAction(() -> currencyDAO.insertCurrencyRates(currency)).subscribeOn(Schedulers.io())
+                        .subscribe();
+                return currency;
+            });
+        } else {
+            currencySingle = currencyDAO.getCurrencies(baseCurrency);
+        }
+        return currencySingle;
     }
 
     private void addCurrencyToDB(List<Currency> currencies) {

@@ -34,12 +34,19 @@ public class CurrencyDBTest {
     }
 
     @Test
+    public void insertSingleCurrency_thenVerifyByRetrievingData() {
+        Currency testCurrency = TestUtil.getCurrencyData().get(0);
+        currencyDAO.insertCurrencyRates(testCurrency);
+        Currency dbCurrency = currencyDAO.getCurrencies(testCurrency.getBase()).blockingGet();
+        assertEquals(testCurrency.getBase(), dbCurrency.getBase());
+    }
+
+    @Test
     public void insertCurrencyList_thenVerifyByRetrievingData() {
-        List<Currency> testData = TestUtil.getCurrencyData();
-        currencyDAO.insertCurrencyRates(testData);
-        List<Currency> dbData = currencyDAO.getAllCurrencyRates().blockingGet();
-        assertEquals(testData.size(), dbData.size());
-        assertEquals(testData.get(0).getBase(), dbData.get(0).getBase());
+        List<Currency> testCurrency = TestUtil.getCurrencyData();
+        currencyDAO.insertCurrencyRates(testCurrency);
+        Currency dbCurrency = currencyDAO.getCurrencies(testCurrency.get(0).getBase()).blockingGet();
+        assertEquals(testCurrency.get(0).getBase(), dbCurrency.getBase());
     }
 }
 

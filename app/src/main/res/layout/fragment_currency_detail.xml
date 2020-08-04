@@ -1,12 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/currency_detail_recycler_view"
+    android:id="@+id/activity_main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginLeft="@dimen/extra_padding"
-    android:layout_marginRight="@dimen/extra_padding"
-    app:layoutManager="LinearLayoutManager"
-    tools:context=".ui.CurrencyListActivity"
-    tools:listitem="@layout/currency_rates_detail_item_view" />
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/base_currency_view"
+        style="@style/HeadingTextStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/select_currency" />
+
+    <TextView
+        android:id="@+id/empty_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="@string/no_data"
+        android:textSize="@dimen/big_text_size" />
+
+    <com.currency.rates.ui.RecyclerViewWithEmptyText
+        android:id="@+id/currency_detail_recycler_view"
+        android:name="com.currency.rates.ItemListFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/base_currency_view"
+        app:layoutManager="LinearLayoutManager"
+        />
+
+</RelativeLayout>
